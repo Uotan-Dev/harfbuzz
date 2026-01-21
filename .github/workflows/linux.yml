@@ -8,47 +8,55 @@ on:
     branches: [ main ]
   workflow_dispatch:
 
-permissions:
-  contents: read
-
 jobs:
   build:
     runs-on: ubuntu-24.04
 
     steps:
     - name: Checkout
-      run: |
-        git clone https://github.com/Uotan-Dev/harfbuzz.git
-        cd harfbuzz
-        git checkout abcb75a5d175c1375c6bed2184656e5738f88ffd
+      uses: actions/checkout@v4
+
+    - name: Setup Ccache
+      uses: hendrikmuhs/ccache-action@v1.2
+      with:
+        key: ${{ github.job }}-${{ runner.os }}
+
     - name: Install Dependencies
       run: |
         sudo apt-get update
-        sudo apt-get install \
+        sudo apt-get install -y \
           gcc \
-          gobject-introspection \
-          gtk-doc-tools \
-          libcairo2-dev \
-          libfreetype6-dev \
-          libgirepository1.0-dev \
-          libglib2.0-dev \
-          libgraphite2-dev \
-          libicu-dev \
+          g++ \
+          meson \
+          ninja-build \
           pkg-config \
           help2man
-    - name: Setup Python
-      uses: actions/setup-python@83679a892e2d95755f2dac6acb0bfd1e9ac5d548 # v6.1.0
-      with:
-        python-version: '3.12'
-    - name: Install Python Dependencies
-      run: pip3 install -r .ci/requirements.txt --require-hashes
+
     - name: Setup Meson
       run: |
-           meson setup build   --buildtype=release   --default-library=shared   -Dglib=disabled   -Dicu=disabled   -Dtests=disabled   -Dintrospection=disabled   -Ddocs=disabled   -Dcairo=disabled   -Dgraphite2=disabled   -Dgobject=disabled   -Dfreetype=disabled   -Dcpp_args="-static-libstdc++ -static-libgcc"   -Dcpp_link_args="-static-libstdc++ -static-libgcc"
+        meson setup build \
+          --buildtype=release \
+          --default-library=shared \
+          -Dglib=disabled \
+          -Dicu=disabled \
+          -Dtests=disabled \
+          -Dintrospection=disabled \
+          -Ddocs=disabled \
+          -Dcairo=disabled \
+          -Dgraphite2=disabled \
+          -Dgobject=disabled \
+          -Dfreetype=disabled \
+          -Dcpp_args="-static-libstdc++ -static-libgcc" \
+          -Dcpp_link_args="-static-libstdc++ -static-libgcc"
+
     - name: Build
-      run: meson compile -Cbuild
+      run: meson compile -C build
+
+    - name: Distribution
+      run: meson dist -C build --no-tests
+
     - name: Archive artifacts
-      uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
+      uses: actions/upload-artifact@v4
       with:
         name: harfbuzz
         path: build/meson-dist/harfbuzz-*.tar.xz
