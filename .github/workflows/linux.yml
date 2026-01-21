@@ -20,7 +20,7 @@ jobs:
       run: |
         git clone https://github.com/Uotan-Dev/harfbuzz.git
         cd harfbuzz
-        git checkout tags/12.3.1
+        git checkout abcb75a5d175c1375c6bed2184656e5738f88ffd
     - name: Install Dependencies
       run: |
         sudo apt-get update
