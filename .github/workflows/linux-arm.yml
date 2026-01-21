@@ -58,6 +58,8 @@ jobs:
     - name: Archive artifacts
       uses: actions/upload-artifact@v4
       with:
-        name: harfbuzz
-        path: build/meson-dist/harfbuzz-*.tar.xz
+        name: harfbuzz-arm
+        path: |
+          build/meson-dist/harfbuzz-*.tar.xz
+          build/src/libharfbuzz.so*
         if-no-files-found: error
